@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -23,52 +21,28 @@ public class MainManager : MonoBehaviour
 
     public static MainManager Instance;
 
-private void Awake() {
-    if (Instance != null) {
-        Destroy(gameObject);
-        return;
+    private void Awake() {
+        // Check if GameManager is initialized
+        if (GameManager.Instance == null) {
+            Debug.LogError("GameManager instance is null. Make sure GameManager is present in the scene.");
+            return;
+        }
+
+        GameManager.Instance.LoadGameInfo();
+
+        // Ensure the BestScoreText is not null before accessing it
+        if (BestScoreText != null) {
+            UpdateBestScoreText();
+        } else {
+            Debug.LogError("BestScoreText is not assigned in the inspector.");
+        }
     }
 
-    Instance = this;
-
-    Debug.Log("MainManager Awake called");
-
-    // Check if GameManager is initialized
-    if (GameManager.Instance == null) {
-        Debug.LogError("GameManager instance is null. Make sure GameManager is present in the scene.");
-        return; // Exit if GameManager is not available
+    public void UpdateBestScoreText() {
+        if (GameManager.Instance != null && BestScoreText != null) {
+            BestScoreText.text = "Best Score : " + GameManager.Instance.bestName + " : " + GameManager.Instance.bestScore;
+        }
     }
-
-    GameManager.Instance.LoadGameInfo();
-    UpdateBestScoreText();
-
-    // Ensure the BestScoreText is not null before accessing it
-    if (BestScoreText != null) {
-        BestScoreText.text = "Best Score : " + GameManager.Instance.bestName + " : " + GameManager.Instance.bestScore;
-    } else {
-        Debug.LogError("BestScoreText is not assigned in the inspector.");
-    }
-}
-
-public void UpdateBestScoreText() {
-    if (BestScoreText != null) {
-        BestScoreText.text = "Best Score : " + GameManager.Instance.bestName + " : " + GameManager.Instance.bestScore;
-    }
-}
-
-    // private void Awake() {
-    //     if(Instance != null) {
-    //         Destroy(gameObject);
-    //         return;
-    //     }
-
-    //     Instance = this;
-
-    //     GameManager.Instance.LoadGameInfo();
-
-    //     // Display the best score on UI
-    //     UpdateBestScoreUI();
-    // }
 
     void Start() {
         const float step = 0.6f;

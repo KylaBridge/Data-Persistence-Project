@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -10,7 +8,7 @@ using UnityEditor;
 
 public class GameManager : MonoBehaviour {
 
-    [SerializeField] Text bestScoreText; // Assign this in the Inspector
+    [SerializeField] Text bestScoreText;
     [SerializeField] InputField nameField;
 
     public string playerName = "";
@@ -30,6 +28,12 @@ public class GameManager : MonoBehaviour {
         LoadGameInfo();
     }
 
+       private void OnDisable() {
+        if (Instance == this) {
+            DontDestroyOnLoad(gameObject);
+        }
+    }
+
     private void Start() {
         UpdateBestScoreText(); // Update best score text on startup
     }
@@ -39,7 +43,9 @@ public class GameManager : MonoBehaviour {
             bestScore = score;
             bestName = playerName;
             SaveGameInfo();
-            UpdateBestScoreText(); // Update text when a new best score is set
+            if (bestScoreText != null) {
+            UpdateBestScoreText();
+        }
         }
         Debug.Log("Score: " + score + "  Player: " + playerName);
     }
@@ -55,12 +61,12 @@ public class GameManager : MonoBehaviour {
     }
 
     public void Exit() {
-#if UNITY_EDITOR
-        EditorApplication.ExitPlaymode();
-#else
-        Application.Quit();
-#endif
-    }
+        #if UNITY_EDITOR
+                EditorApplication.ExitPlaymode();
+        #else
+                Application.Quit();
+        #endif
+            }
 
     [System.Serializable]
     class SaveData {
@@ -80,21 +86,30 @@ public class GameManager : MonoBehaviour {
     }
 
     public void LoadGameInfo() {
-        string path = Application.persistentDataPath + "/savefile.json";
+    string path = Application.persistentDataPath + "/savefile.json";
 
-        if(File.Exists(path)) {
-            string json = File.ReadAllText(path);
-            SaveData data = JsonUtility.FromJson<SaveData>(json);
+    if (File.Exists(path)) {
+        string json = File.ReadAllText(path);   
 
+        SaveData data = JsonUtility.FromJson<SaveData>(json);   
+
+
+        // Check if data is null
+        if (data != null) {
             bestName = data.name;
             bestScore = data.bestScore;
             Debug.Log($"Loaded Best Name: {bestName}, Best Score: {bestScore}");
         } else {
-            Debug.LogWarning("Save file not found!");
+            Debug.LogError("Failed to load save data.");
         }
+    } else {
+        Debug.LogWarning("Save file not found!");
+    }
 
-        // Load best name from PlayerPrefs as a fallback
-        bestName = PlayerPrefs.GetString("BestPlayerName", bestName);
+    // Handle null values as a fallback
+    if (string.IsNullOrEmpty(bestName)) {
+        bestName = "Default Player"; // Set a default name
+    }
     }
 
     public void SavePlayerPrefs() {
@@ -104,8 +119,8 @@ public class GameManager : MonoBehaviour {
     }
 
     private void OnApplicationQuit() {
-        SavePlayerPrefs(); // Save PlayerPrefs when the application quits
-        SaveGameInfo(); // Save game info to file when the application quits
+        SavePlayerPrefs();
+        SaveGameInfo();
     }
 
     public void UpdateBestScoreText() {
